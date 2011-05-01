@@ -5,7 +5,7 @@ Roly
 A comparison of various moving window median algorithms.
 
 Roly license
-============
+============ 
 
 Copyright (c) 2011 Keith Goodman
 All rights reserved.
@@ -31,3 +31,9 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
+
+Other code licenses
+===================
+
+Roly contains code from other projects, the license for which should appear
+in the corresponding code files.
