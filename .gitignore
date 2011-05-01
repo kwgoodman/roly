@@ -1,0 +1,6 @@
+*.c
+*.pyc
+build
+dist
+MANIFEST
+*.so
