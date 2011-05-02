@@ -32,7 +32,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "winmedian.h"
+#include "cdoubleheap.h"
 
 enum direction_e {up,down};
 typedef enum direction_e direction_e;
@@ -204,7 +204,7 @@ swap_between  (win_s *w,dnode_s ** heap1,dnode_s **heap2,datum_v new_value)
 
 
 win_s *
-create_winstruct(int nw, int pick_small)
+create_winstruct(int nw, int pick_small, double *a)
 {
     win_s     * w;
     int         i;
@@ -222,7 +222,7 @@ create_winstruct(int nw, int pick_small)
     w->big   = w->small + w->ns;
 
     for(i=0;i<w->nw;i++) {
-        w->nodes[i].value = next_value();
+        w->nodes[i].value = a[i];
         w->small[i]       = &(w->nodes[i]);
     }
     presort(w);
@@ -250,7 +250,7 @@ delete_winstruct(win_s *w)
     free(w);
 }
 
-int
+double
 get_median(win_s *w)
 {
     dnode_s *df;

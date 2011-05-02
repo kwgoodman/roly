@@ -37,7 +37,7 @@
 
 typedef struct win_s   win_s;
 typedef struct dnode_s dnode_s;
-typedef int    datum_v;
+typedef double    datum_v;
 
 /* ---------------- struct definitions --------------------- */
 
@@ -48,7 +48,6 @@ struct dnode_s {
 };
 
 struct win_s {
-    struct stgpool_s * pool;
     dnode_s          * nodes;
     dnode_s         ** small;
     dnode_s         ** big;
@@ -62,7 +61,7 @@ struct win_s {
 /* --------------------- prototypes ------------------------ */
 
 datum_v update_window    (win_s * winstruct, datum_v new_value);
-win_s * create_winstruct (int nw, int pick_small);
+win_s * create_winstruct (int nw, int pick_small, double * a);
 void    delete_winstruct (win_s * winstruct);
 datum_v next_value       (void);
 datum_v get_median       (win_s *winstruct);
