@@ -1,10 +1,9 @@
 import numpy as np
 cimport numpy as np
 import cython
+from numpy cimport PyArray_EMPTY, PyArray_DIMS, NPY_FLOAT64
+np.import_array()
 
-# Linked list code from:
-# http://pages.cs.wisc.edu/~johnl/median_code/median_code.c
-# Put the code in a file names cmove_median.c in the same dir as this file
 cdef extern from "cmove_median.c":
     struct mm_node
     struct mm_list:
@@ -24,12 +23,15 @@ cdef extern from "cmove_median.c":
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
-    cdef int n = a.size, i
+    cdef np.npy_intp *dims
+    dims = PyArray_DIMS(a)
+    cdef int i, n = dims[0]
     if window > n:
         raise ValueError("`window` must be less than a.size.")
     if window < 2:
         raise ValueError("I get a segfault when `window` is 1.")
-    cdef np.ndarray[np.float64_t, ndim=1] y = np.empty(n) 
+    cdef np.ndarray[np.float64_t, ndim=1] y = PyArray_EMPTY(1, dims,
+                                                            NPY_FLOAT64, 0) 
     cdef mm_list mm = mm_new(window)
     for i in range(window):
         mm_insert_init(cython.address(mm), a[i])
