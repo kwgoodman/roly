@@ -30,6 +30,8 @@
 /*                 END COPYRIGHT AND LICENSE NOTICE                      */
 /* --------------------------------------------------------------------- */
 
+/* 2001 Modified by Keith Goodman for bottleneck */
+
 #ifndef HAVE_WINMEDIAN_H
 #define HAVE_WINMEDIAN_H
 

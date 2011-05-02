@@ -30,6 +30,8 @@
 /*                 END COPYRIGHT AND LICENSE NOTICE                      */
 /* --------------------------------------------------------------------- */
 
+/* 2001 Modified by Keith Goodman for bottleneck */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "cdoubleheap.h"

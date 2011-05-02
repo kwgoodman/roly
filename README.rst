@@ -16,6 +16,7 @@ Install
 You'll need to install Cython. Then clone or download roly. Then compile::
 
     roly/roly$ python linkedlist-setup.py build_ext --inplace
+    roly/roly$ python doubleheap-setup.py build_ext --inplace
 
 Example
 =======
