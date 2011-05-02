@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 import cython
-from numpy cimport PyArray_EMPTY, PyArray_DIMS, NPY_FLOAT64
+from numpy cimport PyArray_EMPTY, PyArray_DIMS, PyArray_Copy, NPY_FLOAT64
 np.import_array()
 
 cdef extern from "cmove_median.c":
@@ -26,10 +26,12 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
     cdef np.npy_intp *dims
     dims = PyArray_DIMS(a)
     cdef int i, n = dims[0]
-    if window > n:
+    if window == 1:
+        return PyArray_Copy(a)
+    elif window > n:
         raise ValueError("`window` must be less than a.size.")
-    if window < 2:
-        raise ValueError("I get a segfault when `window` is 1.")
+    elif window <= 0:
+        raise ValueError("`window` must be greater than 0.")
     cdef np.ndarray[np.float64_t, ndim=1] y = PyArray_EMPTY(1, dims,
                                                             NPY_FLOAT64, 0) 
     cdef mm_list mm = mm_new(window)
