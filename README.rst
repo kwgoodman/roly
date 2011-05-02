@@ -2,38 +2,37 @@
 Roly
 ====
 
-A comparison of various moving window median algorithms.
+A comparison of various moving window median algorithms amd implementations.
+
+Install
+=======
+
+You'll need to install Cython. Then clone or download roly. Then compile:
+
+    roly/roly$ python linkedlist-setup.py build_ext --inplace
+
+Example
+=======
+
+Here's how to find the moving window median of a 1d array using the linked
+list method:
+
+    >>> import roly
+    >>> import numpy as np
+    >>> a = np.random.rand(5)
+    >>> a
+    array([ 0.4645463 ,  0.44380489,  0.31820587,  0.6821211 ,  0.4912904 ])
+    >>> roly.linkedlist.move_median(a, 3)
+    array([        nan,         nan,  0.44380489,  0.44380489,  0.4912904 ])
+
+roly also has a slow (python for loop) reference inplementation which is
+useful for unit testing:
+
+   >>> roly.slow.move_median(a, 3)
+   array([        nan,         nan,  0.44380489,  0.44380489,  0.4912904 ])
 
 Roly license
-============ 
-
-Copyright (c) 2011 Keith Goodman
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-      
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
-
-Other code licenses
-===================
+============
 
 Roly contains code from other projects, the license for which should appear
 in the corresponding code files.

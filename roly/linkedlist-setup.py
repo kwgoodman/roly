@@ -7,11 +7,11 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy
 
-ext_modules = [Extension("move_median", ["move_median.pyx"],
+ext_modules = [Extension("linkedlist", ["linkedlist.pyx"],
                include_dirs=[numpy.get_include()])]
 
 setup(
-  name = 'move_median',
+  name = 'linkedlist',
   cmdclass = {'build_ext': build_ext},
   ext_modules = ext_modules
 )
