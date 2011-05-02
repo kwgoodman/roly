@@ -130,7 +130,11 @@ void mm_init_median(struct mm_list *mm) {
 }
 
 npy_float64 mm_get_median(struct mm_list *mm) {
-  return mm->med_node->val;
+  if(mm->len % 2 == 1)  {
+    return mm->med_node->val;
+  } else {
+    return (mm->med_node->val + mm->med_node->smaller_node->val) / 2.0;
+  }
 }
 
 inline void mm_swap_nodes(struct mm_list *mm, 
