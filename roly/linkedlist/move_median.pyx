@@ -35,6 +35,7 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
     cdef mm_list mm = mm_new(window)
     for i in range(window):
         mm_insert_init(cython.address(mm), a[i])
+    for i in range(window):    
         y[i] = np.nan
     mm_init_median(cython.address(mm))
     y[window-1] = mm_get_median(cython.address(mm))
