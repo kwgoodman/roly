@@ -54,14 +54,13 @@ struct win_s {
     int                nw;
     int                ns;
     int                nb;
-    int                pick;
     int                index;
 };
 
 /* --------------------- prototypes ------------------------ */
 
 datum_v update_window    (win_s * winstruct, datum_v new_value);
-win_s * create_winstruct (int nw, int pick_small, double * a);
+win_s * create_winstruct (int nw, double * a);
 void    delete_winstruct (win_s * winstruct);
 datum_v next_value       (void);
 datum_v get_median       (win_s *winstruct);

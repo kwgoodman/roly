@@ -204,7 +204,7 @@ swap_between  (win_s *w,dnode_s ** heap1,dnode_s **heap2,datum_v new_value)
 
 
 win_s *
-create_winstruct(int nw, int pick_small, double *a)
+create_winstruct(int nw, double *a)
 {
     win_s     * w;
     int         i;
@@ -215,10 +215,9 @@ create_winstruct(int nw, int pick_small, double *a)
     if (!w->nodes) {printf("malloc failed!  Bye."); exit(EXIT_FAILURE);}
     w->small = malloc(nw * sizeof *(w->small));
     if (!w->small) {printf("malloc failed!  Bye."); exit(EXIT_FAILURE);}
-    w->pick  = pick_small;
     w->index = 0;
     w->nw    = nw;
-    if(pick_small) {w->nb = nw/2; w->ns = nw - w->nb;} else {w->ns = nw/2; w->nb = nw - w->ns;}
+    w->nb = nw/2; w->ns = nw - w->nb;
     w->big   = w->small + w->ns;
 
     for(i=0;i<w->nw;i++) {
@@ -253,10 +252,11 @@ delete_winstruct(win_s *w)
 double
 get_median(win_s *w)
 {
-    dnode_s *df;
-
-    df = w->pick ? w->small[0] : w->big[0];
-    return df->value;
+    if(w->nw % 2 == 1) {
+        return w->small[0]->value;
+    } else {
+        return (w->small[0]->value + w->big[0]->value) / 2.0;
+    }
 }
 
 static int
