@@ -21,6 +21,8 @@ cdef extern from "cmove_median.c":
     np.npy_float64 mm_get_median(mm_list *mm)
     mm_list mm_new(np.npy_int64 len)
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
     cdef int n = a.size, i
     if window > n:
