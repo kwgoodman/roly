@@ -10,6 +10,12 @@ Roly current contains three moving window median algorithms:
 - Linked list written in C and wrapped in Cython
 - Double heap written in C and wrapped in Cython
 
+So far all the moving window functions in roly calculate the median of a 1d
+window, not 2d is often done in image work.
+
+The roly project is discussed on the Bottleneck mailing list:
+http://groups.google.com/group/bottle-neck
+
 Install
 =======
 
