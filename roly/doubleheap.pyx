@@ -47,6 +47,7 @@ cdef extern from "cdoubleheap.c":
         int        ns
         int        nb
         int        index
+        int        odd
     win_s * init_winstruct(int nw)
     void init_insert(win_s *w, double new_value, int idx)
     win_s* init_presort(win_s *w)

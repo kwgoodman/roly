@@ -57,6 +57,7 @@ struct win_s {
     int                ns;
     int                nb;
     int                index;
+    int                odd;
 };
 
 /* --------------------- prototypes ------------------------ */

@@ -219,7 +219,11 @@ init_winstruct(int nw)
     w->nw    = nw;
     w->nb = nw/2; w->ns = nw - w->nb;
     w->big   = w->small + w->ns;
-
+    if (nw % 2 == 1){
+        w->odd = 1;
+    } else {
+        w->odd = 0;
+    }
     return w;
 }
 
@@ -262,7 +266,7 @@ delete_winstruct(win_s *w)
 double
 get_median(win_s *w)
 {
-    if(w->nw % 2 == 1) {
+    if(w->odd) {
         return w->small[0]->value;
     } else {
         return (w->small[0]->value + w->big[0]->value) / 2.0;
