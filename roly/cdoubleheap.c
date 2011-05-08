@@ -204,12 +204,10 @@ swap_between  (win_s *w,dnode_s ** heap1,dnode_s **heap2,datum_v new_value)
     node1->value        = new_value;
 }
 
-
 win_s *
-create_winstruct(int nw, double *a)
+init_winstruct(int nw)
 {
     win_s     * w;
-    int         i;
 
     w        = malloc(sizeof *w);
     if (!w) {printf("malloc failed!  Bye."); exit(EXIT_FAILURE);}
@@ -222,10 +220,20 @@ create_winstruct(int nw, double *a)
     w->nb = nw/2; w->ns = nw - w->nb;
     w->big   = w->small + w->ns;
 
-    for(i=0;i<w->nw;i++) {
-        w->nodes[i].value = a[i];
-        w->small[i]       = &(w->nodes[i]);
-    }
+    return w;
+}
+
+void        
+init_insert(win_s *w, npy_float64 new_value, int idx)
+{
+    w->nodes[idx].value = new_value;
+    w->small[idx] = &(w->nodes[idx]);
+}
+
+win_s *
+init_presort(win_s *w)
+{
+    int i;
     presort(w);
     for(i=0;i<w->ns;i++) {
         dnode_s *d;

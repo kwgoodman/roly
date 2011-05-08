@@ -47,7 +47,9 @@ cdef extern from "cdoubleheap.c":
         int        ns
         int        nb
         int        index
-    win_s * create_winstruct(int nw, double *a)
+    win_s * init_winstruct(int nw)
+    void init_insert(win_s *w, double new_value, int idx)
+    win_s* init_presort(win_s *w)
     float get_median(win_s *w)
     # Both double in next line should be datum_v but cython complains
     double update_window(win_s * w, double new_value)
@@ -85,7 +87,10 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
                                                             NPY_FLOAT64, 0) 
     for i in range(window):    
         y[i] = np.nan
-    cdef win_s * dheap = create_winstruct(window, <double *>a.data)
+    cdef win_s * dheap = init_winstruct(window)
+    for i in range(window):
+        init_insert(dheap, a[i], i)
+    dheap = init_presort(dheap)
     y[window-1] = get_median(dheap)
     for i in range(window, n):
         y[i] = update_window(dheap, a[i])
