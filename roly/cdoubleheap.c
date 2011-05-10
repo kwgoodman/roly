@@ -209,16 +209,17 @@ init_winstruct(int nw)
 {
     win_s     * w;
 
-    w        = malloc(sizeof *w);
+    w = malloc(sizeof *w);
     if (!w) {printf("malloc failed!  Bye."); exit(EXIT_FAILURE);}
     w->nodes = malloc(nw * sizeof *(w->nodes));
     if (!w->nodes) {printf("malloc failed!  Bye."); exit(EXIT_FAILURE);}
     w->small = malloc(nw * sizeof *(w->small));
     if (!w->small) {printf("malloc failed!  Bye."); exit(EXIT_FAILURE);}
     w->index = 0;
-    w->nw    = nw;
-    w->nb = nw/2; w->ns = nw - w->nb;
-    w->big   = w->small + w->ns;
+    w->nw = nw;
+    w->nb = nw/2;
+    w->ns = nw - w->nb;
+    w->big = w->small + w->ns;
     if (nw % 2 == 1){
         w->odd = 1;
     } else {
