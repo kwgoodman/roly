@@ -13,7 +13,6 @@ typedef struct Mediator_t
    int   idx;   //position in circular queue
    int   minCt; //count of items in min heap
    int   maxCt; //count of items in max heap
-   int   odd;
 } Mediator;
 
 /*--- Helper Functions ---*/
@@ -92,11 +91,6 @@ Mediator* MediatorNew(int nItems)
    {  m->pos[nItems]= ((nItems+1)/2) * ((nItems&1)?-1:1);
       m->heap[m->pos[nItems]]=nItems;
    }
-   if (nItems % 2 == 1){
-      m->odd = 1;
-   } else {
-      m->odd = 0;
-   }
    return m;
 }
 
@@ -125,13 +119,9 @@ void MediatorInsert(Mediator* m, Item v)
 
 //returns median item (or average of 2 when item count is even)
 Item MediatorMedian(Mediator* m)
-{
-   if (m->odd) {
-      return m->data[m->heap[0]];
-   }
-   else
-   {
-      return (m->data[m->heap[0]] + m->data[m->heap[-1]]) / 2;
-   }    
+{  
+   Item v= m->data[m->heap[0]];
+   if (m->minCt<m->maxCt) { v=(v+m->data[m->heap[-1]])/2; }
+   return v;  
 }
 
