@@ -10,4 +10,8 @@ try:
     import doubleheap
 except:
     pass
+try:
+    import doubleheap2
+except:
+    pass
 
