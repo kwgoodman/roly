@@ -12,6 +12,8 @@ ext_modules = [Extension("doubleheap", ["doubleheap.pyx"],
                Extension("linkedlist", ["linkedlist.pyx"],
                include_dirs=[numpy.get_include()]),
                Extension("doubleheap2", ["doubleheap2.pyx"],
+               include_dirs=[numpy.get_include()]),
+               Extension("doubleheap3", ["doubleheap3.pyx"],
                include_dirs=[numpy.get_include()])]
 
 setup(

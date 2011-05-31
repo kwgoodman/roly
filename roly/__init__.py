@@ -14,4 +14,8 @@ try:
     import doubleheap2
 except:
     pass
+try:
+    import doubleheap3
+except:
+    pass
 

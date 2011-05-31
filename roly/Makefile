@@ -15,4 +15,4 @@ build:
 
 .PHONY: clean
 clean:
-	rm -rf *.so build doubleheap.c doubleheap2.c linkedlist.c
+	rm -rf *.so build doubleheap.c doubleheap2.c doubleheap3.c linkedlist.c
