@@ -34,25 +34,25 @@ np.import_array()
 __all__ = ['move_median']
 
 cdef extern from "cdoubleheap3.c":
-    struct node:
+    struct mm_node:
         np.npy_int64    small
         np.npy_int64    idx
         np.npy_float64  val
-        node           *next
-    struct double_heap:
+        mm_node         *next
+    struct mm_handle:
+        np.npy_int64    n_tot
         np.npy_int64    n_s
         np.npy_int64    n_l
-        node          **s_heap
-        node          **l_heap
-        node          **nodes
-        node           *first
-        node           *last
-    double_heap dh_create(np.npy_int64 len)
-    void dh_insert_init(double_heap *dh, np.npy_int64 idx,
-                        np.npy_float64 val)
-    void dh_init_median(double_heap *dh)
-    void dh_update(double_heap *dh, np.npy_float64 val)
-    np.npy_float64 dh_median(double_heap *dh)
+        mm_node          **s_heap
+        mm_node          **l_heap
+        mm_node          **nodes
+        mm_node           *first
+        mm_node           *last
+    mm_handle *mm_new(np.npy_int64 len)
+    void mm_insert_init(mm_handle *mm, np.npy_int64 idx, np.npy_float64 val)
+    void mm_init_median(mm_handle *mm)
+    void mm_update(mm_handle *mm, np.npy_float64 val)
+    np.npy_float64 mm_get_median(mm_handle *mm)
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -86,12 +86,12 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
                                                             NPY_FLOAT64, 0) 
     for i in range(window):    
         y[i] = np.nan
-    cdef double_heap dh = dh_create(window)
+    cdef mm_handle *mm = mm_new(window)
     for i in range(window):
-        dh_insert_init(cython.address(dh), i, a[i])
-    dh_init_median(cython.address(dh))
-    y[window-1] = dh_median(cython.address(dh))
+        mm_insert_init(mm, i, a[i])
+    mm_init_median(mm)
+    y[window-1] = mm_get_median(mm)
     for i in range(window, n):
-        dh_update(cython.address(dh), a[i])
-        y[i] = dh_median(cython.address(dh))
+        mm_update(mm, a[i])
+        y[i] = mm_get_median(mm)
     return y
