@@ -27,7 +27,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.  
 */
 
-#define NUM_CHILDREN 2
+#define NUM_CHILDREN 8
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 struct mm_node {
