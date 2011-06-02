@@ -59,8 +59,8 @@ struct mm_handle {
   
   // Most nodes are leaf nodes, therefore it makes sense to have a
   // quick way to check if a node is a leaf to avoid processing.
-  npy_uint64 s_first_leaf; 
-  npy_uint64 l_first_leaf; 
+  npy_uint64 s_first_leaf; // First leaf index in the small heap.
+  npy_uint64 l_first_leaf; // First leaf index in the large heap.
 };
 
 
@@ -249,7 +249,6 @@ struct mm_handle *mm_new(const npy_uint64 len) {
 }
 
 
-
 /*
  * Update the running median with a new value. 
  */
@@ -263,7 +262,7 @@ void mm_update(struct mm_handle *mm, npy_float64 val) {
   mm->last = new_node;
 
   // In small heap.
-  if(new_node->small == 1) {
+  if(new_node->small) {
 
     // Move the node up.
     if(new_node->idx != 0 && 
@@ -364,11 +363,12 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
  * Return the current median value. 
  */
 inline npy_float64 mm_get_median(struct mm_handle *mm) {
-  if(mm->odd == 0) {
+  if(mm->odd) {
     return mm->s_heap[0]->val;
   } else {
     return (mm->s_heap[0]->val + mm->l_heap[0]->val) / 2.0;
   }
+}
 
 
 /*

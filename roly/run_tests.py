@@ -45,9 +45,9 @@ if True:
 
 # Timing plots. 
 if True:
-    num_elements = 2000000
+    num_elements = 20000
     a = np.random.normal(size=num_elements)
-    windows = 2**np.arange(2, 19)
+    windows = np.arange(2, 1000)
     #t_ll  = [time_fn(median_ll, a, window) for window in windows]
     t_dh1 = [time_fn(median1, a, window) for window in windows]
     t_dh2 = [time_fn(median2, a, window) for window in windows]
