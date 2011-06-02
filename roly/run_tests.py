@@ -47,8 +47,7 @@ if True:
 if True:
     num_elements = 2000000
     a = np.random.normal(size=num_elements)
-    windows = [3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383,
-               32767, 65535]
+    windows = 2**np.arange(2, 19)
     #t_ll  = [time_fn(median_ll, a, window) for window in windows]
     t_dh1 = [time_fn(median1, a, window) for window in windows]
     t_dh2 = [time_fn(median2, a, window) for window in windows]
