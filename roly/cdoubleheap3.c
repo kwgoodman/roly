@@ -39,7 +39,6 @@ struct mm_node {
 
 
 struct mm_handle {
-  npy_int64        n_tot;  // The total number of elements in nodes below.
   npy_int64        n_s;    // The number of elements in the min heap.
   npy_int64        n_l;    // The number of elements in the max heap. 
   struct mm_node **s_heap; // The min heap.
@@ -62,85 +61,17 @@ struct mm_handle {
 struct mm_handle *mm_new(npy_int64 len) {
   npy_int64 i;
   struct mm_handle *mm = malloc(sizeof(struct mm_handle));
-  mm->n_tot = len;
-  mm->n_l = len / 2;
-  mm->n_s = mm->n_l + len % 2;
+  mm->n_l = 0;
+  mm->n_s = 0;
   mm->nodes = malloc(len * sizeof(struct mm_node*));
 
   for(i = 0; i < len; ++i) {
     mm->nodes[i] = malloc(sizeof(struct mm_node));
   }
   
-  mm->first = mm->nodes[0];
-  mm->last  = mm->nodes[mm->n_tot - 1];
-  
   mm->s_heap = mm->nodes;
-  mm->l_heap = &mm->nodes[mm->n_s];
+  mm->l_heap = &mm->nodes[len/2 + len % 2];
   return mm;
-}
-
-
-/*
- * Insert initial values into the double heap structure. 
- * 
- * Arguments:
- * mm  -- The double heap structure.
- * idx -- The index of the value running from 0 to len - 1. 
- * val -- The value to insert. 
- */
-inline void mm_insert_init(struct mm_handle *mm, 
-                           npy_int64 idx, 
-                           npy_float64 val) {
-  mm->nodes[idx]->val = val;
-}
-
-
-inline int _node_comp(const void *lhs, const void *rhs) {
-  struct mm_node *l_node = *(struct mm_node**)lhs;
-  struct mm_node *r_node = *(struct mm_node**)rhs;
-
-  if(l_node->val < r_node->val) {
-    return -1;
-  }
-  if(l_node->val > r_node->val) {
-    return 1;
-  }
-  return 0;
-}
-
-
-/*
- * Initialize the double heap structure to find the median. 
- */
-void mm_init_median(struct mm_handle *mm) {
-  npy_int64 i;
-  npy_int64 j;
-  struct mm_node *tmp;
-
-  // Initialize the next pointers. 
-  for(i = 0; i < mm->n_s + mm->n_l - 1; ++i) {
-    mm->nodes[i]->next = mm->nodes[i + 1];
-  }
-  
-  qsort(mm->nodes, mm->n_tot, sizeof(struct mm_node*), _node_comp);
-
-  // Reverse the min heap array. 
-  for(i = 0; i < mm->n_s / 2; ++i) {
-    j = mm->n_s - 1 - i;
-    tmp = mm->s_heap[i];
-    mm->s_heap[i] = mm->s_heap[j];
-    mm->s_heap[j] = tmp;
-  }
-
-  // Initialize the nodes' indices. 
-  for(i = 0; i < mm->n_s; ++i) {
-    mm->s_heap[i]->idx = i;
-    mm->s_heap[i]->small = 1;
-  }
-  for(i = 0; i < mm->n_l; ++i) {
-    mm->l_heap[i]->idx = i;
-    mm->l_heap[i]->small = 0;
-  }
 }
 
 
@@ -290,7 +221,7 @@ inline void mm_update(struct mm_handle *mm, npy_float64 val) {
 
   // Replace value of first inserted node, and update first, last.
   new_node->val = val;
-  mm->first = mm->first->next;
+  mm->first = mm->first->next; 
   mm->last->next = new_node;
   mm->last = new_node;
 
@@ -323,14 +254,68 @@ inline void mm_update(struct mm_handle *mm, npy_float64 val) {
 
 
 /*
+ * Insert initial values into the double heap structure. 
+ * 
+ * Arguments:
+ * mm  -- The double heap structure.
+ * idx -- The index of the value running from 0 to len - 1. 
+ * val -- The value to insert. 
+ */
+inline void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
+  struct mm_node *node;
+  struct mm_node *first;
+
+  // The first node. 
+  if(mm->n_s == 0) {
+    node = mm->s_heap[0];
+    node->small = 1;
+    node->idx   = 0;
+    node->val   = val;
+    node->next  = mm->l_heap[0];
+
+    mm->n_s = 1;
+    mm->first = mm->last = node;
+  } 
+
+  // Nodes after the first. 
+  else {
+    // Add to the large heap. 
+    if(mm->n_s > mm->n_l) {
+      node = mm->l_heap[mm->n_l];
+      node->small = 0;
+      node->idx   = mm->n_l;
+      node->next  = mm->first;
+
+      mm->first = node;
+      ++mm->n_l;
+      mm_update(mm, val);
+    } 
+    
+    // Add to the small heap.
+    else {
+      node = mm->s_heap[mm->n_s];
+      node->small = 1;
+      node->idx   = mm->n_s;
+      node->next  = mm->first;
+      
+      mm->first = node;
+      ++mm->n_s;
+      mm_update(mm, val);
+    }
+  }
+}
+
+
+/*
  * Return the current median value. 
  */
 inline npy_float64 mm_get_median(struct mm_handle *mm) {
   return mm->s_heap[0]->val;
 }
 
-
 /*
+ * Print the two heaps to the screen.
+ */
 void mm_dump(struct mm_handle *mm) {
   printf("\n\nFirst: %f\n", mm->first->val);
   printf("Last: %f\n", mm->last->val);
@@ -346,7 +331,6 @@ void mm_dump(struct mm_handle *mm) {
     printf("%l %f\n", mm->l_heap[i]->idx, mm->l_heap[i]->val);
   }
 }
-*/
 
 
 /*
@@ -354,7 +338,7 @@ void mm_dump(struct mm_handle *mm) {
  */
 inline void mm_free(struct mm_handle *mm) {
   npy_int64 i;
-  for(i = 0; i < mm->n_tot; ++i) {
+  for(i = 0; i < mm->n_s + mm->n_l; ++i) {
     free(mm->nodes[i]);
   }
   free(mm->nodes);

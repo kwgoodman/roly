@@ -49,10 +49,10 @@ cdef extern from "cdoubleheap3.c":
         mm_node           *first
         mm_node           *last
     mm_handle *mm_new(np.npy_int64 len)
-    void mm_insert_init(mm_handle *mm, np.npy_int64 idx, np.npy_float64 val)
-    void mm_init_median(mm_handle *mm)
+    void mm_insert_init(mm_handle *mm, np.npy_float64 val)
     void mm_update(mm_handle *mm, np.npy_float64 val)
     np.npy_float64 mm_get_median(mm_handle *mm)
+    void mm_free(mm_handle *mm)
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -88,10 +88,12 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
         y[i] = np.nan
     cdef mm_handle *mm = mm_new(window)
     for i in range(window):
-        mm_insert_init(mm, i, a[i])
-    mm_init_median(mm)
+        mm_insert_init(mm, a[i])
+
     y[window-1] = mm_get_median(mm)
     for i in range(window, n):
         mm_update(mm, a[i])
         y[i] = mm_get_median(mm)
-    return y
+    mm_free(mm)
+    return y    
+
