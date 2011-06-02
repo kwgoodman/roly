@@ -39,14 +39,15 @@ struct mm_node {
 
 
 struct mm_handle {
-  npy_uint64       n_s;    // The number of elements in the min heap.
-  npy_uint64       n_l;    // The number of elements in the max heap. 
-  struct mm_node **s_heap; // The min heap.
-  struct mm_node **l_heap; // The max heap.
-  struct mm_node **nodes;  // All the nodes. s_heap and l_heap point
-                           // to locations in this array after initialization.
-  struct mm_node  *first;  // The node added first to the list of nodes. 
-  struct mm_node  *last;   // The last (most recent) node added. 
+  npy_uint64       n_s;       // The number of elements in the min heap.
+  npy_uint64       n_l;       // The number of elements in the max heap. 
+  struct mm_node **s_heap;    // The min heap.
+  struct mm_node **l_heap;    // The max heap.
+  struct mm_node **nodes;     // All the nodes. s_heap and l_heap point
+                              // into this array. 
+  struct mm_node  *node_data; // Pointer to memory location where nodes live. 
+  struct mm_node  *first;     // The node added first to the list of nodes. 
+  struct mm_node  *last;      // The last (most recent) node added. 
 };
 
 
@@ -63,12 +64,7 @@ struct mm_handle *mm_new(const npy_uint64 len) {
   mm->n_l = 0;
   mm->n_s = 0;
   mm->nodes = malloc(len * sizeof(struct mm_node*));
-
-  npy_uint64 i = len;
-  while(i--) {
-    mm->nodes[i] = malloc(sizeof(struct mm_node));
-  }
-  
+  mm->node_data  = malloc(len * sizeof(struct mm_node));
   mm->s_heap = mm->nodes;
   mm->l_heap = &mm->nodes[len/2 + len % 2];
   return mm;
@@ -324,7 +320,7 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
 
   // The first node. 
   if(mm->n_s == 0) {
-    node = mm->s_heap[0];
+    node = mm->s_heap[0] = &mm->node_data[0];
     node->small = 1;
     node->idx   = 0;
     node->val   = val;
@@ -338,7 +334,7 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
   else {
     // Add to the large heap. 
     if(mm->n_s > mm->n_l) {
-      node = mm->l_heap[mm->n_l];
+      node = mm->l_heap[mm->n_l] = &mm->node_data[mm->n_s + mm->n_l];
       node->small = 0;
       node->idx   = mm->n_l;
       node->next  = mm->first;
@@ -350,7 +346,7 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
     
     // Add to the small heap.
     else {
-      node = mm->s_heap[mm->n_s];
+      node = mm->s_heap[mm->n_s] = &mm->node_data[mm->n_s + mm->n_l];
       node->small = 1;
       node->idx   = mm->n_s;
       node->next  = mm->first;
@@ -394,10 +390,7 @@ void mm_dump(struct mm_handle *mm) {
  * Free memory allocated in mm_new.
  */
 inline void mm_free(struct mm_handle *mm) {
-  npy_int64 i = mm->n_s + mm->n_l;
-  while(i--) {
-    free(mm->nodes[i]);
-  }
+  free(mm->node_data);
   free(mm->nodes);
   free(mm);
 }

@@ -45,7 +45,8 @@ if True:
 
 # Timing plots. 
 if True:
-    a = np.random.normal(size=2000000)
+    num_elements = 2000000
+    a = np.random.normal(size=num_elements)
     windows = [3, 7, 15, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383,
                32767, 65535]
     #t_ll  = [time_fn(median_ll, a, window) for window in windows]
@@ -57,6 +58,9 @@ if True:
     plt.plot(windows, t_dh1, 'o-', label='DH1')
     plt.plot(windows, t_dh2, 'o-', label='DH2')
     plt.plot(windows, t_dh3, 'o-', label='DH3')
+    plt.title('{0} elements'.format(num_elements))
+    plt.xlabel('Window size')
+    plt.ylabel('Time')
     plt.legend()
     plt.show()
 
