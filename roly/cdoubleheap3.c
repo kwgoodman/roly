@@ -64,30 +64,6 @@ struct mm_handle {
 };
 
 
-/* 
- * Construct the double heap with the given total number of values. 
- * 
- * Arguments:
- * len -- The total number of values in the double heap. 
- *
- * Return: The mm_handle structure, uninitialized. 
- */
-struct mm_handle *mm_new(const npy_uint64 len) {
-  struct mm_handle *mm = malloc(sizeof(struct mm_handle));
-  mm->odd = len % 2;
-  mm->n_l = 0;
-  mm->n_s = 0;
-
-  mm->nodes = malloc(len * sizeof(struct mm_node*));
-  mm->node_data = malloc(len * sizeof(struct mm_node));
-
-  mm->s_heap = mm->nodes;
-  mm->l_heap = &mm->nodes[len/2 + len % 2];
-  
-  return mm;
-}
-
-
 /*
  * Return the smallest child node of the given node, if it doesn't exist, 
  * return the node itself. 
@@ -259,14 +235,19 @@ inline void swap_heap_heads(struct mm_handle *mm) {
  */
 struct mm_handle *mm_new(const npy_uint64 len) {
   struct mm_handle *mm = malloc(sizeof(struct mm_handle));
+  mm->odd = len % 2;
   mm->n_l = 0;
   mm->n_s = 0;
+
   mm->nodes = malloc(len * sizeof(struct mm_node*));
-  mm->node_data  = malloc(len * sizeof(struct mm_node));
+  mm->node_data = malloc(len * sizeof(struct mm_node));
+
   mm->s_heap = mm->nodes;
   mm->l_heap = &mm->nodes[len/2 + len % 2];
+  
   return mm;
 }
+
 
 
 /*
@@ -361,7 +342,6 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
       ++mm->n_l;
       mm->l_first_leaf = ceil((mm->n_l - 1) / (double)NUM_CHILDREN);
       mm_update(mm, val);
-      
     } 
     
     // Add to the small heap.
@@ -384,7 +364,7 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
  * Return the current median value. 
  */
 inline npy_float64 mm_get_median(struct mm_handle *mm) {
-  if(mm->odd) {
+  if(mm->odd == 0) {
     return mm->s_heap[0]->val;
   } else {
     return (mm->s_heap[0]->val + mm->l_heap[0]->val) / 2.0;
