@@ -92,10 +92,8 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
         y[i] = np.nan
     cdef mm_handle *mm = mm_new(window)
     for i in range(window):
-#        print "inserting", i, a[i]
         mm_insert_init(mm, a[i])
-
-    #y[window-1] = mm_get_median(mm)
+    y[window-1] = mm_get_median(mm)
     for i in range(window, n):
         mm_update(mm, a[i])
         y[i] = mm_get_median(mm)
