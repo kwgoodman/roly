@@ -179,6 +179,7 @@ inline void move_up_small(struct mm_node **heap,
   }
 }
 
+
 /*
  * Move the given node down through the heap to the appropriate position. 
  */ 
@@ -238,6 +239,33 @@ inline void swap_heap_heads(struct mm_handle *mm) {
   mm->l_heap[0] = s_node;
   move_up_large(mm->l_heap, mm->n_l, s_node);
   move_down_small(mm->s_heap, mm->n_s, l_node);
+}
+
+
+/*
+ *   ----------------
+ *   Public functions
+ *   ----------------
+ */
+
+
+/* 
+ * Construct the double heap with the given total number of values. 
+ * 
+ * Arguments:
+ * len -- The total number of values in the double heap. 
+ *
+ * Return: The mm_handle structure, uninitialized. 
+ */
+struct mm_handle *mm_new(const npy_uint64 len) {
+  struct mm_handle *mm = malloc(sizeof(struct mm_handle));
+  mm->n_l = 0;
+  mm->n_s = 0;
+  mm->nodes = malloc(len * sizeof(struct mm_node*));
+  mm->node_data  = malloc(len * sizeof(struct mm_node));
+  mm->s_heap = mm->nodes;
+  mm->l_heap = &mm->nodes[len/2 + len % 2];
+  return mm;
 }
 
 
@@ -361,7 +389,6 @@ inline npy_float64 mm_get_median(struct mm_handle *mm) {
   } else {
     return (mm->s_heap[0]->val + mm->l_heap[0]->val) / 2.0;
   }
-}
 
 
 /*
