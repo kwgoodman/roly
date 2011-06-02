@@ -362,8 +362,11 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
 /*
  * Return the current median value. 
  */
-inline npy_float64 mm_get_median(struct mm_handle *mm) {
+inline npy_float64 mm_get_median_odd(struct mm_handle *mm) {
   return mm->s_heap[0]->val;
+}
+inline npy_float64 mm_get_median_even(struct mm_handle *mm) {
+  return (mm->s_heap[0]->val + mm->l_heap[0]->val) / 2;
 }
 
 /*
