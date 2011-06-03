@@ -27,6 +27,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.  
 */
 
+typedef npy_int64   _size_t;
+typedef npy_float64 value_t;
+
 
 /*
  * The number of children has a maximum of 8 due to the manual loop-
@@ -40,130 +43,142 @@ DAMAGE.
 // Find indices of parent, first, and last child. 
 #define P_IDX(i) ((i) - 1) / NUM_CHILDREN
 #define FC_IDX(i) NUM_CHILDREN * (i) + 1
-#define LC_IDX(i) (i) / NUM_CHILDREN + NUM_CHILDREN - 1
 
 
-struct mm_node {
-  npy_uint32   small;   // 1 if the node is in the small heap. 
-  npy_uint64   idx;     // The node's index in the heap array.
-  npy_float64  val;     // The node's value. 
-  struct mm_node *next; // The next node in order of insertion. 
+struct _mm_node {
+  int          small; // 1 if the node is in the small heap. 
+  _size_t       idx;   // The node's index in the heap array.
+  value_t      val;   // The node's value. 
+  struct _mm_node *next;  // The next node in order of insertion. 
 };
 
+typedef struct _mm_node mm_node;
 
-struct mm_handle {
-  int              odd;       // 1 if the window size is odd, 0 otherwise.
-  npy_uint64       n_s;       // The number of elements in the min heap.
-  npy_uint64       n_l;       // The number of elements in the max heap. 
-  struct mm_node **s_heap;    // The min heap.
-  struct mm_node **l_heap;    // The max heap.
-  struct mm_node **nodes;     // All the nodes. s_heap and l_heap point
-                              // into this array. 
-  struct mm_node  *node_data; // Pointer to memory location where nodes live. 
-  struct mm_node  *first;     // The node added first to the list of nodes. 
-  struct mm_node  *last;      // The last (most recent) node added. 
+
+struct _mm_handle {
+  int       odd;       // 1 if the window size is odd, 0 otherwise.
+  _size_t   n_s;       // The number of elements in the min heap.
+  _size_t   n_l;       // The number of elements in the max heap. 
+  mm_node **s_heap;    // The min heap.
+  mm_node **l_heap;    // The max heap.
+  mm_node **nodes;     // All the nodes. s_heap and l_heap point into
+                       // this array.
+  mm_node  *node_data; // Pointer to memory location where nodes live. 
+  mm_node  *first;     // The node added first to the list of nodes. 
+  mm_node  *last;      // The last (most recent) node added. 
   
   // Most nodes are leaf nodes, therefore it makes sense to have a
   // quick way to check if a node is a leaf to avoid processing.
-  npy_uint64 s_first_leaf; // First leaf index in the small heap.
-  npy_uint64 l_first_leaf; // First leaf index in the large heap.
+  _size_t s_first_leaf; // First leaf index in the small heap.
+  _size_t l_first_leaf; // First leaf index in the large heap.
 };
 
-
-/*
- * Return the smallest child node of the given node, if it doesn't exist, 
- * return the node itself. 
- */
-inline struct mm_node *get_smallest_child(struct mm_node **heap,
-                                          npy_uint64       len,
-                                          struct mm_node  *node) {
-  npy_uint64 idx = node->idx;
-  npy_int64 i_first = FC_IDX(idx);
-  npy_int64 num_children = min(i_first + NUM_CHILDREN, len) - i_first;
-
-  struct mm_node *ch;
-  switch(num_children) {
-  case  8: ch = heap[i_first +  7]; if(ch->val < node->val) { node = ch; }
-  case  7: ch = heap[i_first +  6]; if(ch->val < node->val) { node = ch; }
-  case  6: ch = heap[i_first +  5]; if(ch->val < node->val) { node = ch; }
-  case  5: ch = heap[i_first +  4]; if(ch->val < node->val) { node = ch; }
-  case  4: ch = heap[i_first +  3]; if(ch->val < node->val) { node = ch; }
-  case  3: ch = heap[i_first +  2]; if(ch->val < node->val) { node = ch; }
-  case  2: ch = heap[i_first +  1]; if(ch->val < node->val) { node = ch; }
-  case  1: ch = heap[i_first     ]; if(ch->val < node->val) { node = ch; }
-  }
-  return node;
-}
+typedef struct _mm_handle mm_handle;
 
 
 /*
- * Return the largest child node of the given node, if it doesn't exist, 
- * return the node itself. 
+ * Return the index of the smallest child of the node. The pointer
+ * child will also be set.
  */
-inline struct mm_node *get_largest_child(struct mm_node **heap,
-                                         npy_uint64       len,
-                                         struct mm_node  *node) {
-  npy_int64 i_first = NUM_CHILDREN * node->idx + 1;
-  npy_int64 num_children = min(i_first + NUM_CHILDREN, len) - i_first;
-
-  struct mm_node *ch;  
-  switch(num_children) {
-  case  8: ch = heap[i_first +  7]; if(ch->val > node->val) { node = ch; }
-  case  7: ch = heap[i_first +  6]; if(ch->val > node->val) { node = ch; }
-  case  6: ch = heap[i_first +  5]; if(ch->val > node->val) { node = ch; }
-  case  5: ch = heap[i_first +  4]; if(ch->val > node->val) { node = ch; }
-  case  4: ch = heap[i_first +  3]; if(ch->val > node->val) { node = ch; }
-  case  3: ch = heap[i_first +  2]; if(ch->val > node->val) { node = ch; }
-  case  2: ch = heap[i_first +  1]; if(ch->val > node->val) { node = ch; }
-  case  1: ch = heap[i_first     ]; if(ch->val > node->val) { node = ch; }
+inline _size_t get_smallest_child(mm_node **heap,
+                                 _size_t   size,
+                                 _size_t   idx,
+                                 mm_node  *node,
+                                 mm_node  **child) {
+  _size_t i0 = FC_IDX(idx);
+  _size_t i1 = i0 + NUM_CHILDREN;
+  i1 = min(i1, size);
+  
+  switch(i1 - i0) {
+  case  8: if(heap[i0 + 7]->val < heap[idx]->val) { idx = i0 + 7; }
+  case  7: if(heap[i0 + 6]->val < heap[idx]->val) { idx = i0 + 6; }
+  case  6: if(heap[i0 + 5]->val < heap[idx]->val) { idx = i0 + 5; }
+  case  5: if(heap[i0 + 4]->val < heap[idx]->val) { idx = i0 + 4; }
+  case  4: if(heap[i0 + 3]->val < heap[idx]->val) { idx = i0 + 3; }
+  case  3: if(heap[i0 + 2]->val < heap[idx]->val) { idx = i0 + 2; }
+  case  2: if(heap[i0 + 1]->val < heap[idx]->val) { idx = i0 + 1; }
+  case  1: if(heap[i0    ]->val < heap[idx]->val) { idx = i0;     }
   }
-  return node;
+
+  *child = heap[idx];
+  return idx;
 }
 
 
-/* 
- * Swap two nodes. 
- */ 
-inline void swap_nodes(struct mm_node **heap, 
-                       struct mm_node  *node1, 
-                       struct mm_node  *node2) {
-  npy_uint64 idx1 = node1->idx;
-  npy_uint64 idx2 = node2->idx;
-  heap[idx1] = node2;
-  heap[idx2] = node1;
-  node1->idx = idx2;
-  node2->idx = idx1;
+/*
+ * Return the index of the largest child of the node. The pointer
+ * child will also be set. 
+ */
+inline _size_t get_largest_child(mm_node **heap,
+                                 _size_t   size,
+                                 _size_t   idx,
+                                 mm_node  *node,
+                                 mm_node  **child) {
+  _size_t i0 = FC_IDX(idx);
+  _size_t i1 = i0 + NUM_CHILDREN;
+  i1 = min(i1, size);
+  
+  switch(i1 - i0) {
+  case  8: if(heap[i0 + 7]->val > heap[idx]->val) { idx = i0 + 7; }
+  case  7: if(heap[i0 + 6]->val > heap[idx]->val) { idx = i0 + 6; }
+  case  6: if(heap[i0 + 5]->val > heap[idx]->val) { idx = i0 + 5; }
+  case  5: if(heap[i0 + 4]->val > heap[idx]->val) { idx = i0 + 4; }
+  case  4: if(heap[i0 + 3]->val > heap[idx]->val) { idx = i0 + 3; }
+  case  3: if(heap[i0 + 2]->val > heap[idx]->val) { idx = i0 + 2; }
+  case  2: if(heap[i0 + 1]->val > heap[idx]->val) { idx = i0 + 1; }
+  case  1: if(heap[i0    ]->val > heap[idx]->val) { idx = i0;     }
+  }
+
+  *child = heap[idx];
+  return idx;
 }
+
+
+/*
+ * Swap nodes.
+ */
+#define SWAP_NODES(heap, idx1, node1, idx2, node2) \
+  heap[idx1] = node2;                              \
+  heap[idx2] = node1;                              \
+  node1->idx = idx2;                               \
+  node2->idx = idx1;                               \
+  idx1       = idx2
 
 
 /*
  * Move the given node up through the heap to the appropriate position. 
  */
-inline void move_up_small(struct mm_node **heap,
-                          npy_uint64       len,
-                          struct mm_node  *node) {
-  struct mm_node *parent;
-  while(node->idx !=  0) {
-    parent = heap[P_IDX(node->idx)];
-    if(node->val > parent->val) {
-      swap_nodes(heap, node, parent);
-    } else {
+inline void move_up_small(mm_node **heap,
+                          _size_t   size,
+                          _size_t   idx,
+                          mm_node  *node,
+                          _size_t   p_idx,
+                          mm_node  *parent) {
+  do {
+    SWAP_NODES(heap, idx, node, p_idx, parent);
+    if(idx == 0) {
       break;
     }
-  }
+    p_idx = P_IDX(idx);
+    parent = heap[p_idx];
+  } while (node->val > parent->val);
 }
 
 
 /*
  * Move the given node down through the heap to the appropriate position. 
  */ 
-inline void move_down_small(struct mm_node **heap,
-                            npy_uint64       len,
-                            struct mm_node  *node) {
-  struct mm_node *child = get_largest_child(heap, len, node);
-  while(node->val < child->val) {
-    swap_nodes(heap, node, child);
-    child = get_largest_child(heap, len, node);
+inline void move_down_small(mm_node **heap,
+                            _size_t   size,
+                            _size_t   idx,
+                            mm_node  *node) {
+  mm_node *child;
+  value_t val   = node->val;
+  _size_t c_idx = get_largest_child(heap, size, idx, node, &child);
+
+  while(val < child->val) {
+    SWAP_NODES(heap, idx, node, c_idx, child);
+    c_idx = get_largest_child(heap, size, idx, node, &child);
   }
 }
 
@@ -172,47 +187,57 @@ inline void move_down_small(struct mm_node **heap,
  * Move the given node down through the heap to the appropriate
  * position.
  */ 
-inline void move_down_large(struct mm_node **heap,
-                            npy_uint64       len,
-                            struct mm_node  *node) {
-  struct mm_node *parent;
-  while(node->idx != 0) {
-    parent = heap[P_IDX(node->idx)];
-    if(node->val < parent->val) {
-      swap_nodes(heap, node, parent);
-    } else {
+inline void move_down_large(mm_node **heap,
+                            _size_t   size,
+                            _size_t   idx,
+                            mm_node  *node,
+                            _size_t   p_idx,
+                            mm_node  *parent) {
+  do {
+    SWAP_NODES(heap, idx, node, p_idx, parent);
+    if(idx == 0) {
       break;
     }
-  }
+    p_idx = P_IDX(idx);
+    parent = heap[p_idx];
+  } while (node->val < parent->val);
 }
+
 
 
 /*
  * Move the given node down through the heap to the appropriate position. 
  */ 
-inline void move_up_large(struct mm_node **heap,
-                          npy_uint64       len,
-                          struct mm_node  *node) {
-  struct mm_node *child = get_smallest_child(heap, len, node);
-  while(node->val > child->val) {
-    swap_nodes(heap, node, child);
-    child = get_smallest_child(heap, len, node);
+inline void move_up_large(mm_node **heap,
+                          _size_t   size,
+                          _size_t   idx,
+                          mm_node  *node) {
+  mm_node *child;
+  value_t val   = node->val;
+  _size_t c_idx = get_smallest_child(heap, size, idx, node, &child);
+
+  while(val > child->val) {
+    SWAP_NODES(heap, idx, node, c_idx, child);
+    c_idx = get_smallest_child(heap, size, idx, node, &child);
   }
 }
 
 
 /*
- * Rebalance the heaps.
+ * Swap the heap heads. 
  */
-inline void swap_heap_heads(struct mm_handle *mm) {
-  struct mm_node *s_node = mm->s_heap[0];
-  struct mm_node *l_node = mm->l_heap[0];
-  l_node->small = 1;
+inline void swap_heap_heads(mm_node **s_heap,
+                                _size_t   n_s,
+                                mm_node **l_heap,
+                                _size_t   n_l,
+                                mm_node  *s_node,
+                                mm_node  *l_node) {
   s_node->small = 0;
-  mm->s_heap[0] = l_node;
-  mm->l_heap[0] = s_node;
-  move_up_large(mm->l_heap, mm->n_l, s_node);
-  move_down_small(mm->s_heap, mm->n_s, l_node);
+  l_node->small = 1;
+  s_heap[0] = l_node;
+  l_heap[0] = s_node;
+  move_down_small(s_heap, n_s, 0, l_node);
+  move_up_large(l_heap, n_l, 0, s_node);
 }
 
 
@@ -227,21 +252,21 @@ inline void swap_heap_heads(struct mm_handle *mm) {
  * Construct the double heap with the given total number of values. 
  * 
  * Arguments:
- * len -- The total number of values in the double heap. 
+ * size -- The total number of values in the double heap. 
  *
  * Return: The mm_handle structure, uninitialized. 
  */
-struct mm_handle *mm_new(const npy_uint64 len) {
-  struct mm_handle *mm = malloc(sizeof(struct mm_handle));
-  mm->odd = len % 2;
+mm_handle *mm_new(const _size_t size) {
+  mm_handle *mm = malloc(sizeof(mm_handle));
+  mm->odd = size % 2;
   mm->n_l = 0;
   mm->n_s = 0;
 
-  mm->nodes = malloc(len * sizeof(struct mm_node*));
-  mm->node_data = malloc(len * sizeof(struct mm_node));
+  mm->nodes = malloc(size * sizeof(mm_node*));
+  mm->node_data = malloc(size * sizeof(mm_node));
 
   mm->s_heap = mm->nodes;
-  mm->l_heap = &mm->nodes[len/2 + len % 2];
+  mm->l_heap = &mm->nodes[size/2 + size % 2];
   
   return mm;
 }
@@ -250,55 +275,96 @@ struct mm_handle *mm_new(const npy_uint64 len) {
 /*
  * Update the running median with a new value. 
  */
-void mm_update(struct mm_handle *mm, npy_float64 val) {
-  struct mm_node *new_node = mm->first;
+void mm_update(mm_handle *mm, value_t val) {
 
   // Local variables.
-  npy_uint64 idx = new_node->idx;
-  struct mm_node **l_heap = mm->l_heap;
-  struct mm_node **s_heap = mm->s_heap;
+  mm_node **l_heap = mm->l_heap;
+  mm_node **s_heap = mm->s_heap;
+  _size_t n_s      = mm->n_s;
+  _size_t n_l      = mm->n_l;
+
+  // Nodes and indices. 
+  mm_node *node = mm->first;
+  _size_t  idx  = node->idx;
+
+  mm_node *node2;
+  _size_t  idx2;
 
   // Replace value of first inserted node, and update first, last.
-  new_node->val = val;
+  node->val = val;
   mm->first = mm->first->next; 
-  mm->last->next = new_node;
-  mm->last = new_node;
+  mm->last->next = node;
+  mm->last = node;
 
   // In small heap.
-  if(new_node->small) {
+  if(node->small) {
 
-    // Move the node up.
-    if(idx != 0 && val > s_heap[P_IDX(idx)]->val) {
-      move_up_small(s_heap, mm->n_s, new_node);
-    } 
-    
-    // Move the node down. 
-    else if(idx < mm->s_first_leaf) {
-      move_down_small(s_heap, mm->n_s, new_node);
+    // Internal or leaf node. 
+    if(idx > 0) {
+      idx2 = P_IDX(idx);
+      node2 = s_heap[idx2];
+      
+      // Move up.
+      if(val > node2->val) {
+        move_up_small(s_heap, n_s, idx, node, idx2, node2);
+        
+        // Maybe swap between heaps.
+        node2 = l_heap[0];
+        if(val > node2->val) {
+          swap_heap_heads(s_heap, n_s, l_heap, n_l, node, node2);
+        }
+      }
+
+      // Move down. 
+      else if(idx < mm->s_first_leaf) {
+        move_down_small(s_heap, n_s, idx, node);
+      }
     }
-
-    // Swap heads if necessary. 
-    if(val > l_heap[0]->val) {
-      swap_heap_heads(mm);
+    
+    // Head node. 
+    else {
+      node2 = l_heap[0];
+      if(val > node2->val) {
+        swap_heap_heads(s_heap, n_s, l_heap, n_l, node, node2);
+      } else {
+        move_down_small(s_heap, n_s, idx, node);
+      }
     }
   }
 
   // In large heap. 
   else {
 
-    // Move the node down.
-    if(idx != 0 && val < l_heap[P_IDX(idx)]->val) {
-      move_down_large(l_heap, mm->n_l, new_node);
-    } 
-    
-    // Move the node up.
-    else if(idx < mm->l_first_leaf) {
-      move_up_large(l_heap, mm->n_l, new_node);
+    // Internal or leaf node. 
+    if(idx > 0) {
+      idx2 = P_IDX(idx);
+      node2 = l_heap[idx2];
+      
+      // Move down.
+      if(val < node2->val) {
+        move_down_large(l_heap, n_l, idx, node, idx2, node2);
+        
+        // Maybe swap between heaps.
+        node2 = s_heap[0];
+        if(val < node2->val) {
+          swap_heap_heads(s_heap, n_s, l_heap, n_l, node2, node);
+        }
+      }
+
+      // Move up. 
+      else if(idx < mm->l_first_leaf) {
+        move_up_large(l_heap, n_l, idx, node);
+      }
     }
     
-    // Swap heads if necessary. 
-    if(val < s_heap[0]->val) {
-      swap_heap_heads(mm);
+    // Head node. 
+    else {
+      node2 = s_heap[0];
+      if(val < node2->val) {
+        swap_heap_heads(s_heap, n_s, l_heap, n_l, node2, node);
+      } else {
+        move_up_large(l_heap, n_l, idx, node);
+      }
     }
   }
 }
@@ -309,14 +375,18 @@ void mm_update(struct mm_handle *mm, npy_float64 val) {
  * 
  * Arguments:
  * mm  -- The double heap structure.
- * idx -- The index of the value running from 0 to len - 1. 
+ * idx -- The index of the value running from 0 to size - 1. 
  * val -- The value to insert. 
  */
-void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
-  struct mm_node *node;
+void mm_insert_init(mm_handle *mm, value_t val) {
+  // Some local variables. 
+  mm_node *node;
+  _size_t n_s = mm->n_s;
+  _size_t n_l = mm->n_l;
+
 
   // The first node. 
-  if(mm->n_s == 0) {
+  if(n_s == 0) {
     node = mm->s_heap[0] = &mm->node_data[0];
     node->small = 1;
     node->idx   = 0;
@@ -332,10 +402,10 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
   else {
 
     // Add to the large heap. 
-    if(mm->n_s > mm->n_l) {
-      node = mm->l_heap[mm->n_l] = &mm->node_data[mm->n_s + mm->n_l];
+    if(n_s > n_l) {
+      node = mm->l_heap[n_l] = &mm->node_data[n_s + n_l];
       node->small = 0;
-      node->idx   = mm->n_l;
+      node->idx   = n_l;
       node->next  = mm->first;
 
       mm->first = node;
@@ -346,9 +416,9 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
     
     // Add to the small heap.
     else {
-      node = mm->s_heap[mm->n_s] = &mm->node_data[mm->n_s + mm->n_l];
+      node = mm->s_heap[n_s] = &mm->node_data[n_s + n_l];
       node->small = 1;
-      node->idx   = mm->n_s;
+      node->idx   = n_s;
       node->next  = mm->first;
 
       mm->first = node;
@@ -363,7 +433,7 @@ void mm_insert_init(struct mm_handle *mm, npy_float64 val) {
 /*
  * Return the current median value. 
  */
-inline npy_float64 mm_get_median(struct mm_handle *mm) {
+inline value_t mm_get_median(mm_handle *mm) {
   if(mm->odd) {
     return mm->s_heap[0]->val;
   } else {
@@ -375,11 +445,11 @@ inline npy_float64 mm_get_median(struct mm_handle *mm) {
 /*
  * Print the two heaps to the screen.
  */
-void mm_dump(struct mm_handle *mm) {
+void mm_dump(mm_handle *mm) {
   printf("\n\nFirst: %f\n", (double)mm->first->val);
   printf("Last: %f\n", (double)mm->last->val);
   
-  npy_uint64 i;
+  _size_t i;
   printf("\n\nSmall heap:\n");
   for(i = 0; i < mm->n_s; ++i) {
     printf("%i %f\n", (int)mm->s_heap[i]->idx, mm->s_heap[i]->val);
@@ -395,7 +465,7 @@ void mm_dump(struct mm_handle *mm) {
 /*
  * Free memory allocated in mm_new.
  */
-inline void mm_free(struct mm_handle *mm) {
+inline void mm_free(mm_handle *mm) {
   free(mm->node_data);
   free(mm->nodes);
   free(mm);

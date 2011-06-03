@@ -46,17 +46,17 @@ if True:
 
 # Timing plots. 
 if True:
-    num_elements = 100000
+    num_elements = 1000000
     a = np.random.normal(size=num_elements)
-    windows = 2 * np.arange(2, 1024, 4) + 1
+    windows = np.linspace(3, 10000, 20).astype(int)
     #t_ll  = [time_fn(median_ll, a, window) for window in windows]
     t_dh1 = [time_fn(median1, a, window) for window in windows]
-    t_dh2 = [time_fn(median2, a, window) for window in windows]
+    #t_dh2 = [time_fn(median2, a, window) for window in windows]
     t_dh3 = [time_fn(median3, a, window) for window in windows]
     
     #plt.plot(windows, t_ll, 'o-', label='LL')
     plt.plot(windows, t_dh1, 'o-', label='DH1')
-    plt.plot(windows, t_dh2, 'o-', label='DH2')
+    #plt.plot(windows, t_dh2, 'o-', label='DH2')
     plt.plot(windows, t_dh3, 'o-', label='DH3')
     plt.title('{0} elements'.format(num_elements))
     plt.xlabel('Window size')

@@ -34,12 +34,15 @@ np.import_array()
 __all__ = ['move_median']
 
 cdef extern from "cdoubleheap3.c":
-    struct mm_node:
+    struct _mm_node:
         np.npy_uint32   small
         np.npy_uint64   idx
         np.npy_float64  val
-        mm_node         *next
-    struct mm_handle:
+        _mm_node         *next
+
+    ctypedef _mm_node mm_node
+
+    struct _mm_handle:
         int              odd
         np.npy_uint64    n_s
         np.npy_uint64    n_l
@@ -51,7 +54,10 @@ cdef extern from "cdoubleheap3.c":
         mm_node           *last
         np.npy_uint64 s_first_leaf
         np.npy_uint64 l_first_leaf
-    mm_handle *mm_new(np.npy_uint64 len)
+
+    ctypedef _mm_handle mm_handle
+
+    mm_handle *mm_new(np.npy_uint64 size)
     void mm_insert_init(mm_handle *mm, np.npy_float64 val)
     void mm_update(mm_handle *mm, np.npy_float64 val)
     np.npy_float64 mm_get_median(mm_handle *mm)
