@@ -21,7 +21,8 @@ from doubleheap import move_median as median1
 from doubleheap2 import move_median as median2
 from doubleheap3 import move_median as median3
 from slow import move_median as median_slow
-
+from scipy.signal import medfilt
+from scipy.ndimage import median_filter
 
 if False:
     a = np.random.uniform(size=30)
@@ -45,9 +46,9 @@ if True:
 
 # Timing plots. 
 if True:
-    num_elements = 20000
+    num_elements = 100000
     a = np.random.normal(size=num_elements)
-    windows = np.arange(2, 1000)
+    windows = 2 * np.arange(2, 1024, 4) + 1
     #t_ll  = [time_fn(median_ll, a, window) for window in windows]
     t_dh1 = [time_fn(median1, a, window) for window in windows]
     t_dh2 = [time_fn(median2, a, window) for window in windows]
