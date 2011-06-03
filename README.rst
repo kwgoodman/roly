@@ -8,7 +8,7 @@ Roly current contains three moving window median algorithms:
 
 - Python "for loop"
 - Linked list written in C and wrapped in Cython
-- Double heap written in C and wrapped in Cython
+- Double heap (3 implementations) written in C and wrapped in Cython
 
 So far all the moving window functions in roly calculate the median of a 1d
 window, not 2d is often done in image work.
@@ -19,10 +19,10 @@ http://groups.google.com/group/bottle-neck
 Install
 =======
 
-You'll need to install Cython. Then clone or download roly. Then compile::
+You'll need to install Cython. Then clone or download roly. Then make::
 
-    roly/roly$ python linkedlist-setup.py build_ext --inplace
-    roly/roly$ python doubleheap-setup.py build_ext --inplace
+    $ cd roly/roly
+    $ make all
 
 Example
 =======
@@ -46,6 +46,13 @@ And the double heap method::
     >>> roly.doubleheap.move_median(a, 3)
     array([        nan,         nan,  0.44380489,  0.44380489,  0.4912904 ])
 
+The are three implementations of the double heap method (the first one
+contains a bug)::
+
+    >>> roly.doubleheap.move_median
+    >>> roly,doubleheap2.move_median
+    >>> roly.doubleheap3.move_median
+
 roly also has a slow (python for loop) reference inplementation which is
 useful for unit testing::
 
@@ -55,39 +62,10 @@ useful for unit testing::
 Performance
 ===========
 
-A comparison of the performance for the linked list and the double heap
-algorithm for various window sizes::
+Roly contain a benchmark. To run it::
 
-    >>> a = np.random.rand(1e5)
-
-    >>> window = 10
-    >>> timeit roly.slow.move_median(a, window)
-    1 loops, best of 3: 2.57 s per loop
-    >>> timeit roly.linkedlist.move_median(a, window)
-    100 loops, best of 3: 4.57 ms per loop
-    >>> timeit roly.doubleheap.move_median(a, window)
-    100 loops, best of 3: 4.87 ms per loop
-
-    >>> window = 100
-    >>> timeit roly.linkedlist.move_median(a, window)
-    10 loops, best of 3: 19.4 ms per loop
-    >>> timeit roly.doubleheap.move_median(a, window)
-    100 loops, best of 3: 6.55 ms per loop
-
-    >>> window = 1000
-    >>> timeit roly.linkedlist.move_median(a, window)
-    1 loops, best of 3: 206 ms per loop
-    >>> timeit roly.doubleheap.move_median(a, window)
-    100 loops, best of 3: 7.76 ms per loop
-
-    >>> window = 10000
-    >>> timeit roly.linkedlist.move_median(a, window)
-    1 loops, best of 3: 4.56 s per loop
-    >>> timeit roly.doubleheap.move_median(a, window)
-    100 loops, best of 3: 10.2 ms per loop
-
-The double heap is much faster than the linked list except at small window
-widths. And even then it is not far behind.
+    $ cd roly/roly
+    $ python run_tests.py
 
 Roly license
 ============
