@@ -94,7 +94,7 @@ def move_median(np.ndarray[np.float64_t, ndim=1] a, int window):
         raise ValueError("`window` must be greater than 0.")
     cdef np.ndarray[np.float64_t, ndim=1] y = PyArray_EMPTY(1, dims,
                                                             NPY_FLOAT64, 0)
-    for i in range(window):    
+    for i in range(window-1):    
         y[i] = np.nan
     cdef mm_handle *mm = mm_new(window)
     for i in range(window):
